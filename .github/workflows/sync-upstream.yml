@@ -29,10 +29,24 @@ jobs:
       - name: Mirror upstream GitHub Releases
         env:
           GH_TOKEN: ${{ secrets.SYNC_PAT }}
+        shell: bash
         run: |
-          gh release list --repo decolua/9router --limit 20 | while IFS=$'\t' read -r title type tag date; do
-            if ! gh release view "$tag" --repo ${{ github.repository }} >/dev/null 2>&1; then
-              notes=$(gh release view "$tag" --repo decolua/9router --json body -q .body)
-              gh release create "$tag" --repo ${{ github.repository }} --title "$title" --notes "$notes" || true
+          set +e
+          gh release list --repo decolua/9router --limit 20 --json tagName -q .[].tagName > /tmp/tags.txt
+          cat /tmp/tags.txt
+          while read -r tag; do
+            if [ -z "$tag" ]; then
+              continue
             fi
-          done
+            gh release view "$tag" --repo ${{ github.repository }} >/dev/null 2>&1
+            exists=$?
+            if [ "$exists" -ne 0 ]; then
+              title=$(gh release view "$tag" --repo decolua/9router --json name -q .name)
+              notes=$(gh release view "$tag" --repo decolua/9router --json body -q .body)
+              gh release create "$tag" --repo ${{ github.repository }} --title "$title" --notes "$notes"
+              echo "Created release $tag"
+            else
+              echo "Release $tag already exists, skipping"
+            fi
+          done < /tmp/tags.txt
+          exit 0
