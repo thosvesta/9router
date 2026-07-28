@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.SYNC_PAT }}
 
       - name: Sync branch and tags from upstream
         run: |
@@ -28,7 +28,7 @@ jobs:
 
       - name: Mirror upstream GitHub Releases
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
         run: |
           gh release list --repo decolua/9router --limit 20 | while IFS=$'\t' read -r title type tag date; do
             if ! gh release view "$tag" --repo ${{ github.repository }} >/dev/null 2>&1; then
