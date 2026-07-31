@@ -2,7 +2,7 @@ name: Sync Fork with Upstream
 
 on:
   schedule:
-    - cron: '0 * * * *'  # every hour
+    - cron: '0 * * * *'  # Runs every hour
   workflow_dispatch:
 
 permissions:
@@ -16,6 +16,11 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.SYNC_PAT }}
+
+      - name: Configure git user
+        run: |
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
       - name: Sync branch and tags from upstream
         run: |
